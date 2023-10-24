@@ -1,0 +1,157 @@
+'To time log user entry on each row
+'copy this to the current sheet
+Private Sub Worksheet_Change(ByVal Target As Range)
+    Dim r As Range, Intersection As Range, cell As Range
+    Dim s As String
+
+    Set r = Range("B2:J10000")
+    Set Intersection = Intersect(r, Target)
+    s = vbCrLf & Environ("USERNAME") & vbCrLf & Application.UserName
+
+    If Intersection Is Nothing Then Exit Sub
+
+    Application.EnableEvents = False
+        For Each cell In Intersection
+            Range("K" & cell.Row).Value = Date & " " & Time & s
+        Next cell
+    Application.EnableEvents = True
+End Sub
+
+'New code
+'To count all lines of code
+'copy this to a module of SubStandards
+Sub CodeCounter()
+
+On Error GoTo CodeLineCount_Err
+Dim CodeLineCount As Double
+Set CodeLineCount_Var = ThisWorkbook.VBProject
+
+    For Each CodeLineCount_Var In CodeLineCount_Var.VBComponents
+        CodeLineCount = CodeLineCount + CodeLineCount_Var.CodeModule.CountOfLines
+    Next
+
+CodeLineCount_Total = CodeLineCount
+
+CodeLineCount_Err:
+Set CodeLineCount_Var = Nothing
+MsgBox CodeLineCount_Total - 17
+
+End Sub
+
+
+'New code
+'To capture time
+'copy below to a new module
+Sub capturetime()
+
+  Dim timeWS As Worksheet
+  Dim timeRange As Range
+  Dim vUser
+  vUser = Environ("Username")
+
+  'Change "Sheet3" to whatever worksheet is your click log
+  Set timeWS = ThisWorkbook.Sheets("LOG")
+
+  'find the last cell in column A of your log
+  Set timeRange = timeWS.Range("A" & timeWS.Rows.Count).End(xlUp).Offset(1)
+
+  'Write which button was clicked in column A
+  timeRange.Value = Application.Caller
+
+  'Write the time in column B
+  timeRange.Offset(, 1).Value = Now()
+  timeRange.Offset(, 2).Value = vUser
+  timeRange.Offset(, 3).Value = "Start Run"
+  timeRange.Offset(, 4).Value = ActiveSheet.Range("E20").Value
+  timeRange.Offset(, 5).Value = ActiveSheet.Range("B20").Value
+  
+  Set timeWS = Nothing
+  Set timeRange = Nothing
+  Set vUser = Nothing
+
+End Sub
+
+
+Sub captureendtime()
+
+  Dim timeWS As Worksheet
+  Dim timeRange As Range
+  Dim vUser
+  vUser = Environ("Username")
+
+  'Change "Sheet3" to whatever worksheet is your click log
+  Set timeWS = ThisWorkbook.Sheets("LOG")
+
+  'find the last cell in column A of your log
+  Set timeRange = timeWS.Range("A" & timeWS.Rows.Count).End(xlUp).Offset(1)
+
+  'Write which button was clicked in column A
+  timeRange.Value = Application.Caller
+
+  'Write the time in column B
+  timeRange.Offset(, 1).Value = Now()
+  timeRange.Offset(, 2).Value = vUser
+  timeRange.Offset(, 3).Value = "Ended Run"
+  timeRange.Offset(, 4).Value = ActiveSheet.Range("E20").Value
+  timeRange.Offset(, 5).Value = ActiveSheet.Range("B20").Value
+  
+  Set timeWS = Nothing
+  Set timeRange = Nothing
+  Set vUser = Nothing
+
+End Sub
+
+
+'New code
+'To auto change button color
+'copy this to a module of SubStandards
+Sub MyShape_Click()
+  Dim sh As Shape
+   Set sh = ActiveSheet.Shapes(Application.Caller)
+   If sh.Fill.ForeColor.RGB = RGB(0, 255, 127) Then
+        sh.Fill.ForeColor.RGB = RGB(0, 0, 255)
+   Else
+        sh.Fill.ForeColor.RGB = RGB(0, 255, 127)
+  End If
+  Call MyFont_Click
+End Sub
+
+Sub MyFont_Click()
+  Dim sh As Shape
+   Set sh = ActiveSheet.Shapes(Application.Caller)
+   If sh.TextFrame.Characters.Font.Color = RGB(0, 100, 0) Then
+        sh.TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+   Else
+        sh.TextFrame.Characters.Font.Color = RGB(0, 100, 0)
+  End If
+End Sub
+
+'New code
+'To convert txt file to csv file
+'Copy this to a new module
+Sub ConvertFiles()
+Dim sName As String, sPath As String
+sPath = Sheets("Sheet1").Range("B6") & "\"  '<== change to reflect your folder.  Make sure it ends with a "\" character
+sName = Dir(sPath)
+Do While sName <> ""
+  If LCase(Right(sName, 3)) = "txt" Then
+     Workbooks.OpenText Filename:=sPath & sName, _
+        Origin:=437, _
+        StartRow:=1, _
+        DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, _
+        ConsecutiveDelimiter:=False, _
+        Tab:=True, _
+        Semicolon:=False, _
+        Comma:=False, _
+        Space:=False, _
+        Other:=False, _
+        TrailingMinusNumbers:=True
+     ActiveWorkbook.SaveAs Filename:=sPath & Left(sName, Len(sName) - 4) & ".csv", _
+          FileFormat:=xlCSV, _
+          CreateBackup:=False
+     ActiveWorkbook.Close SaveChanges:=False
+  End If
+  sName = Dir()
+Loop
+End Sub
