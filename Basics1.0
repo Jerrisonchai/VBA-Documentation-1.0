@@ -1,3 +1,61 @@
+'List of previous work
+'1. NICC result transpose to txt
+'2. Ping IP address
+'3. bat file to convert csv
+'4. bat file to synce 2 folders
+'5. html result to txt file
+'6. scrapping web, get all search results
+'7. Sales monitoring
+'8. Stock card login
+'9. LIS export, download ALL
+'10. IQ excel, CS email
+'11. IP IQMY excel - get info from pdf, then match ID
+'12. IQ TAT KPI
+'13. IQ number excel
+'14. IQ check email header
+'15. Biomark daily excel
+'16. LAB registration form
+'17. LIS raw data daily
+
+'To reset cell value
+Sub Resettoone()
+ActiveSheet.Range("E20").Value = 1
+End Sub
+
+Sub Adding()
+ActiveSheet.Range("E20").Value = ActiveSheet.Range("E20").Value + 1
+End Sub
+
+Sub Minus()
+ActiveSheet.Range("E20").Value = ActiveSheet.Range("E20").Value - 1
+End Sub
+
+Sub Minus()
+ActiveSheet.Range("C15").Value = ActiveSheet.Range("C15").Value - 1
+Call ClearCellColor
+End Sub
+
+Sub Adding()
+Call Highlight
+ActiveSheet.Range("C15").Value = ActiveSheet.Range("C15").Value + 1
+End Sub
+
+Sub ClearColor()
+ActiveSheet.Range("L2:L200").FormatConditions.Delete
+End Sub
+
+Sub Highlight()
+Dim LabNo As String
+LabNo = Range("C15").Value
+ActiveSheet.Range("I" & LabNo).Interior.ColorIndex = 6
+End Sub
+
+Sub ClearCellColor()
+Dim LabNo As String
+LabNo = Range("C15").Value
+ActiveSheet.Range("I" & LabNo).Interior.ColorIndex = 0
+End Sub
+
 'To time log user entry on each row
 'copy this to the current sheet
 Private Sub Worksheet_Change(ByVal Target As Range)
@@ -39,7 +97,7 @@ MsgBox CodeLineCount_Total - 17
 End Sub
 
 
-'New code
+'New code - AUDIT TRAIL
 'To capture time
 'copy below to a new module
 Sub capturetime()
@@ -154,4 +212,2084 @@ Do While sName <> ""
   End If
   sName = Dir()
 Loop
+End Sub
+
+Private Sub CheckBox1_Click()
+If UserForm1.CheckBox1.Value = True Then
+UserForm1.TextBox1.PasswordChar = ""
+Else
+UserForm1.TextBox1.PasswordChar = "*"
+End If
+
+End Sub
+
+
+'New code
+'To create userform for login / getting details
+'Create userform with 2 buttons, then copy this to userform code page
+Private Sub CommandButton1_Click()
+ActiveSheet.Range("B14").Value = TextBox3.Value
+ActiveSheet.Range("B15").Value = TextBox1.Value
+Unload Me
+
+End Sub
+
+Private Sub CommandButton2_Click()
+Unload Me
+
+End Sub
+
+
+Private Sub UserForm_Click()
+Unload Me
+End Sub
+
+'New code
+'generate txt file from a sheet
+'To import data from different source, do Paste Here sheet, then provide reference sheet to match, then put transpose page if needed, create import list sheet with indirect index match, define folder location
+'Copy this code to new module
+Sub ExceltoText()
+
+'Declaring the variables
+ Dim FileName, sLine, Deliminator As String
+ Dim LastCol, LastRow, FileNumber As Integer
+
+'Excel Location and File Name
+ FileName = Sheets("Purge").Range("I1") & "\XXXX " & Format(Now(), "YYYY-MM-DD hh mm AMPM") & ".txt"
+
+'Field Separator
+ Deliminator = vbTab
+
+'Identifying the Last Cell
+ LastCol = ActiveSheet.Cells.SpecialCells(xlCellTypeLastCell).Column
+ LastRow = ActiveSheet.Cells.SpecialCells(xlCellTypeLastCell).Row
+ FileNumber = FreeFile
+
+'Creating or Overwrighting a text file
+ Open FileName For Output As FileNumber
+
+'Reading the data from Excel using For Loop
+ For i = 1 To LastRow
+ For j = 1 To LastCol
+
+'Removing Deliminator if it is wrighting the last column
+ If j = LastCol Then
+ sLine = sLine & Cells(i, j).Value
+ Else
+ sLine = sLine & Cells(i, j).Value & Deliminator
+ End If
+ Next j
+
+'Wrighting data into text file
+ Print #FileNumber, sLine
+ sLine = ""
+ Next i
+
+'Closing the Text File
+ Close #FileNumber
+
+'Generating message to display
+ MsgBox "Text file has been generated"
+
+ End Sub
+
+
+'New code
+'IT tools to Ping IP Adress
+'Create Sheet1 for list of IP address, list all IP on Column B
+'Copy code to new module, using 2 button, start ping, stop ping
+Function Ping(strip)
+Dim objShell, boolcode
+Set objShell = CreateObject("Wscript.Shell")
+boolcode = objShell.Run("ping -n 1 -w 1000 " & strip, 0, True)
+If boolcode = 0 Then
+    Ping = True
+Else
+    Ping = False
+End If
+End Function
+
+Sub PingSystem()
+Dim strip As String
+Sheet1.Range("F1").Value = ""
+Do Until Sheet1.Range("F1").Value = "STOP"
+Sheet1.Range("F1").Value = "TESTING"
+For introw = 2 To ActiveSheet.Cells(65536, 2).End(xlUp).Row
+    strip = ActiveSheet.Cells(introw, 2).Value
+
+    If Ping(strip) = True Then
+        ActiveSheet.Cells(introw, 3).Interior.ColorIndex = 0
+        ActiveSheet.Cells(introw, 3).Font.Color = RGB(0, 0, 0)
+        ActiveSheet.Cells(introw, 3).Value = "Online"
+        Application.Wait (Now + TimeValue("0:00:01"))
+        ActiveSheet.Cells(introw, 3).Font.Color = RGB(0, 200, 0)
+    Else
+        ActiveSheet.Cells(introw, 3).Interior.ColorIndex = 0
+        ActiveSheet.Cells(introw, 3).Font.Color = RGB(200, 0, 0)
+        ActiveSheet.Cells(introw, 3).Value = "Offline"
+        Application.Wait (Now + TimeValue("0:00:01"))
+        ActiveSheet.Cells(introw, 3).Interior.ColorIndex = 6
+    End If
+    If Sheet1.Range("F1").Value = "STOP" Then
+        Exit For
+    End If
+Next
+Loop
+Sheet1.Range("F1").Value = "IDLE"
+End Sub
+
+Sub stop_ping()
+    Sheet1.Range("F1").Value = "STOP"
+End Sub
+
+
+'If you wan to know only device name, use lookup IP on new sheet
+Sub LookupIp()
+    
+    'declare variables
+    Dim StartRow, HostNameColumn, ResultColumn As Integer
+    Dim TotalRows As Integer
+    Dim IpAddress As String
+    
+    'setup initial values
+    StartRow = 2
+    HostNameColumn = 1
+    ResultColumn = 2
+    
+    'find the last row number of a column
+    TotalRows = Cells(Rows.count, HostNameColumn).End(xlUp).Row
+    
+    'clear the previous contents
+    Range(Cells(StartRow, ResultColumn), Cells(TotalRows, ResultColumn + 1).End(xlDown)).ClearContents
+
+    'loop through the hostnames
+    For i = StartRow To TotalRows
+        IpAddress = ActiveSheet.Cells(i, HostNameColumn).Value
+        
+        'evaluate IpAddress if not empty
+        If IpAddress <> "" Then
+
+            Dim objShell As Object
+            Dim returnCode As String
+                    
+            'create windows shell script object
+            Set objShell = CreateObject("wscript.shell")
+            
+            'execute ping command with ipv4 option
+            returnCode = objShell.Exec("ping -a -n 1 -w 500 -4 " & IpAddress).stdout.ReadAll
+         
+            'find the ip-address from the result
+            Dim Hostname As String
+            Hostname = FindIP(returnCode)
+            
+            'if Hostname exists
+            If Hostname <> "" Then
+                'return the ip address after parsing
+                ActiveSheet.Cells(i, ResultColumn).Value = Hostname
+                'ActiveSheet.Cells(i, ResultColumn + 1).Value = returnCode
+                ActiveSheet.Cells(i, ResultColumn).Font.Color = vbBlack
+            Else
+                'IpAddress not reachable
+                ActiveSheet.Cells(i, ResultColumn).Value = "IP-Address not reachable"
+                ActiveSheet.Cells(i, ResultColumn).Font.Color = vbRed
+            End If
+            
+        Else
+            ActiveSheet.Cells(i, ResultColumn).Value = ""
+        End If
+        Application.Wait Now + TimeValue("00:00:01")
+    Next
+
+End Sub
+
+'New code
+'Converting txt file to csv
+'Create new bat file with notepad, use code below, define all folder origin and destination
+'Copy code below
+'cscript script.vbs "Z:\Folder origin\function.xlsm"
+'FOR /f "delims=" %%i IN ('DIR *.xls* /b') DO to-csv.vbs "%%i" "%%~ni.csv"
+'MOVE "Z:\Folder origin\*.csv" "Z:\Folder Destination\ABC"
+DEL "Z:\Folder origin\*.txt"
+
+'In function.xlsm, do new module, copy below
+Sub ConvertFiles()
+Dim sName As String, sPath As String
+sPath = Sheets("Sheet1").Range("B6") & "\"  '<== change to reflect your folder.  Make sure it ends with a "\" character
+sName = Dir(sPath)
+Do While sName <> ""
+  If LCase(Right(sName, 3)) = "csv" Then
+     Workbooks.OpenText Filename:=sPath & sName, _
+        Origin:=437, _
+        StartRow:=1, _
+        DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, _
+        ConsecutiveDelimiter:=False, _
+        Tab:=True, _
+        Semicolon:=False, _
+        Comma:=False, _
+        Space:=False, _
+        Other:=False, _
+        TrailingMinusNumbers:=True
+     ActiveWorkbook.SaveAs Filename:=sPath & Left(sName, Len(sName) - 4) & ".txt", _
+          FileFormat:=xlCSV, _
+          CreateBackup:=False
+     ActiveWorkbook.Close SaveChanges:=False
+  End If
+  sName = Dir()
+Loop
+End Sub
+
+'New code
+'Convert excel to csv
+'Create new bat file with notepad, use code below, define all folder origin and destination
+'Copy code below
+'REM source: http://stackoverflow.com/a/11252731/715608
+'FOR /f "delims=" %%i IN ('DIR *.xls* /b') DO to-csv.vbs "%%i" "%%~ni.csv"
+'MOVE "Z:\Folder origin\*.csv" "Z:\Folder destination\Input to LIMC 01 - Register"
+'DEL "Z:\folder origin\*.xlsx"
+
+
+'New code
+'Sync 2 folders using Bat
+'Create new bat file with notepad, use code below, define all folder origin and destination
+'Copy code below
+'@echo off
+
+'xcopy "\\Ori Folder" "\\10.0.0.14\Another Folder" /D /I /E /F /Y /H /R
+
+
+'New code
+'if user device cannot use Microsoft, create html to get info and then extract txt file
+'create html file, then copy below
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result into Text file</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+    	div {
+            padding: 10px;
+            background-color: #f6f6f6;
+            overflow: hidden;
+        }
+    	input[type=text], textarea, select {
+            font: 17px Calibri;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type=button]{ 
+            font: 17px Calibri;
+            width: auto;
+            float: left;
+            cursor: pointer;
+            padding: 7px;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="tool-implementation">
+        <div id="tool-text-to-csv">
+        
+            <!--Add few elements to the form-->
+            <div>
+                <input type="button" id="bt" value="Save data to file" onclick="saveFile()" />
+            </div>
+ 
+            <div>
+                <textarea rows = "400" cols = "60" name = "description" id="XResult"></textarea><br>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    let saveFile = () => {
+    	
+        // Get the data from each element on the form.
+    	const result = document.getElementById('XResult');
+ 
+        
+        // This variable stores all the data.
+        let data = result.value;
+        
+        // Convert the text to BLOB.
+        const textToBLOB = new Blob([data], { type: 'text/plain' });
+        const sFileName = 'XData.txt';	   // The file to save the data.
+
+        let newLink = document.createElement("a");
+        newLink.download = sFileName;
+
+        if (window.webkitURL != null) {
+            newLink.href = window.webkitURL.createObjectURL(textToBLOB);
+        }
+        else {
+            newLink.href = window.URL.createObjectURL(textToBLOB);
+            newLink.style.display = "none";
+            document.body.appendChild(newLink);
+        }
+
+        newLink.click(); 
+    }
+</script>
+</html>
+
+'New code
+'Searching on browser and result page having too many pages to copy
+'Create xlsm file, copy vba below to a new module
+'edit website address, where to click, where is next page button, define total page
+'each generation will be a newsheet
+Sub ScrapefromWeb()
+  
+    Dim ResultSection As Selenium.WebElement
+    Dim ResultTable As Selenium.WebElement
+    Dim x As Integer
+    Dim y As Integer
+
+    Set ch = New Selenium.IEDriver
+    
+    ch.Start
+    ch.Get "https://www.nsr.org.my/list11.asp" 'change website
+    
+    ch.FindElementById("allSpecialty_ForSearch").SendKeys "Choose..."
+    
+    ch.FindElementByName("buttonSearch").Click
+    
+    Set ResultSection = ch.FindElementByClass("table-responsive")
+    Set ResultTable = ResultSection.FindElementByTag("table")
+    
+    ResultTable.AsTable.ToExcel ThisWorkbook.Worksheets.Add.Range("A1")
+    
+    x = 133
+    y = 22
+
+    Do Until x = 723
+        ch.FindElementByXPath("/html/body/div[3]/div/div[2]/table/tbody/tr/td/div/ul/li[" & x & "]/a").ScrollIntoView
+        ch.FindElementByXPath("/html/body/div[3]/div/div[2]/table/tbody/tr/td/div/ul/li[" & x & "]/a").Click
+    
+        Set ResultSection = ch.FindElementByClass("table-responsive")
+        Set ResultTable = ResultSection.FindElementByTag("table")
+    
+        ResultTable.AsTable.ToExcel ThisWorkbook.Worksheets(2).Cells(y, 1)
+        
+            x = x + 1
+            y = y + 21
+
+    Loop
+    
+    
+End Sub
+
+'New code
+'Sales monitoring pivots having query to be updated
+'Prefer to use Sharepoint to control access, do individual excel too
+'Copy code below to a new module
+Sub RefreshRawData()
+
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/XX/2023 Debtor Masterlist.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/XX/2023 Special Price Master List.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/XX/2023 Stock List Master List.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/XX/2023 Test Group Master List.xlsx")
+ThisWorkbook.RefreshAll
+
+End Sub
+
+Sub closeSource()
+Workbooks("2023 Debtor Masterlist.xlsx").Close
+Workbooks("2023 Special Price Master List.xlsx").Close
+Workbooks("2023 Stock List Master List.xlsx").Close
+Workbooks("2023 Test Group Master List.xlsx").Close
+
+End Sub
+
+Sub RefreshAllPivotTables2()
+
+ThisWorkbook.RefreshAll
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA1.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA2.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA3.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA4.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA5.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA6.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA7.xlsx")
+Workbooks.Open ("https://pathologyasia.sharepoint.com/sites/AREA8.xlsx")
+
+Workbooks("AREA1.xlsx").RefreshAll
+Workbooks("AREA2.xlsx").RefreshAll
+Workbooks("AREA3.xlsx").RefreshAll
+Workbooks("AREA4.xlsx").RefreshAll
+Workbooks("AREA5.xlsx").RefreshAll
+Workbooks("AREA6.xlsx").RefreshAll
+Workbooks("AREA7.xlsx").RefreshAll
+Workbooks("AREA8.xlsx").RefreshAll
+
+Dim wb As Workbook
+For Each wb In Workbooks
+If wb.Path <> "" Then
+wb.Save
+End If
+Next wb
+
+
+End Sub
+
+Sub CloseWorkbooks2()
+Workbooks("AREA1.xlsx").Close
+Workbooks("AREA2.xlsx").Close
+Workbooks("AREA3.xlsx").Close
+Workbooks("AREA4.xlsx").Close
+Workbooks("AREA5.xlsx").Close
+Workbooks("AREA6.xlsx").Close
+Workbooks("AREA7.xlsx").Close
+Workbooks("AREA8.xlsx").Close
+End Sub
+
+
+'New code
+'To setup excel with login access
+'Stock card project refer to individual repository
+
+'New code
+'With LIS system of getting pdf from chrome
+'Setup Selenium basic
+'Excel - open ribbon for develop, always allow macro
+'Selenium installation
+'Tool reference - ms outlook object, selenium type, scripting library
+'Turn Windows features on or off
+'Chrome driver - latest
+'Demo / trial
+'Excel template - set folder location
+
+'To browse webpage and click with loop
+Sub DownloadPDFfromLIS()
+    Call capturetime
+    Set cd = New Selenium.ChromeDriver
+    
+    cd.Start
+    cd.Get "http://webpage.login"
+    cd.FindElementByName("UserTextBox1").SendKeys ActiveSheet.Range("B14").Value
+    cd.FindElementByName("PassTextBox1").SendKeys ActiveSheet.Range("B15").Value
+    cd.FindElementByName("LoginButton1").Click
+    
+    cd.ExecuteScript "window.open(arguments[0])", "http://webpage.searchpage"
+    cd.SwitchToNextWindow
+    cd.FindElementById("MainContent_ReceivedFromSearchTextBox1").SendKeys ActiveSheet.Range("C18").Value
+    cd.FindElementById("MainContent_ReceivedToSearchTextBox1").SendKeys ActiveSheet.Range("C19").Value
+    cd.FindElementById("MainContent_SearchTextBox1").SendKeys ActiveSheet.Range("B20").Value
+    cd.FindElementById("MainContent_SearchDropDownList1").SendKeys ActiveSheet.Range("A20").Value
+    cd.FindElementById("MainContent_SearchTextBox2").SendKeys ActiveSheet.Range("B21").Value
+    cd.FindElementById("MainContent_SearchDropDownList2").SendKeys ActiveSheet.Range("A21").Value
+    cd.FindElementById("MainContent_SearchTextBox3").SendKeys ActiveSheet.Range("B22").Value
+    cd.FindElementById("MainContent_SearchDropDownList3").SendKeys ActiveSheet.Range("A22").Value
+    cd.FindElementById("MainContent_PublishStateButton1").Click
+
+    Dim x As Integer
+    
+    x = 0
+
+    Do Until x = ActiveSheet.Range("B24").Value
+    
+        cd.FindElementById("MainContent_GridView1_ViewLinkButton1_" & x & "").Click
+        cd.Wait "1000" '1 sec
+        cd.SwitchToNextWindow
+
+        cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/select/option").Click
+        cd.FindElementById("MainContent_DownloadPDFButton1").Click
+        cd.Wait "1000" '1 sec
+              
+        Dim displayedValue As String
+        displayedValue = cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/div[1]/table/tbody/tr[24]/td[2]/span").Text
+
+        If InStr(displayedValue, "+") > 0 Then
+            cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/select/option[2]").Click
+            cd.Wait "1000" '1 sec
+            cd.FindElementById("MainContent_DownloadPDFButton1").Click
+            cd.Wait "1000" '1 sec
+
+        End If
+    
+        cd.Window.Close
+        cd.SwitchToPreviousWindow
+        
+            x = x + 1
+        
+    Loop
+    
+    cd.Wait "1000" '1 sec
+    cd.FindElementByXPath("//*[@id='MainContent_GridView1']/tbody/tr[52]/td/table/tbody/tr/td[2]/a").Click
+        
+    Dim y As Integer
+    
+    y = 0
+
+    Do Until y = ActiveSheet.Range("B24").Value
+    
+        cd.FindElementById("MainContent_GridView1_ViewLinkButton1_" & y & "").Click
+        cd.Wait "1000" '1 sec
+        cd.SwitchToNextWindow
+
+        cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/select/option").Click
+        cd.FindElementById("MainContent_DownloadPDFButton1").Click
+        cd.Wait "1000" '1 sec
+              
+        Dim displayedValue2 As String
+        displayedValue = cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/div[1]/table/tbody/tr[24]/td[2]/span").Text
+
+        If InStr(displayedValue2, "+") > 0 Then
+            cd.FindElementByXPath("/html/body/form/div[3]/div[3]/div[1]/select/option[2]").Click
+            cd.Wait "1000" '1 sec
+            cd.FindElementById("MainContent_DownloadPDFButton1").Click
+            cd.Wait "1000" '1 sec
+
+        End If
+        
+        cd.Window.Close
+        cd.SwitchToPreviousWindow
+        
+            y = y + 1
+        
+    Loop
+    
+    cd.Wait "2000" '2 sec
+    Call captureendtime
+End Sub
+
+'To browse webpage and copy all text with loop
+Sub GenerateList()
+    Call capturetime
+    Set cd = New Selenium.ChromeDriver
+    
+    cd.Start
+    cd.Get "http://webpage.searchpage/Login.aspx"
+    cd.FindElementByName("UserTextBox1").SendKeys ActiveSheet.Range("B14").Value
+    cd.FindElementByName("PassTextBox1").SendKeys ActiveSheet.Range("B15").Value
+    cd.FindElementByName("LoginButton1").Click
+    
+    cd.ExecuteScript "window.open(arguments[0])", "http://webpage.searchpage"
+    cd.SwitchToNextWindow
+    cd.FindElementById("MainContent_ReceivedFromSearchTextBox1").SendKeys ActiveSheet.Range("C18").Value
+    cd.FindElementById("MainContent_ReceivedToSearchTextBox1").SendKeys ActiveSheet.Range("C19").Value
+    cd.FindElementById("MainContent_SearchTextBox1").SendKeys ActiveSheet.Range("B20").Value
+    cd.FindElementById("MainContent_SearchDropDownList1").SendKeys ActiveSheet.Range("A20").Value
+    cd.FindElementById("MainContent_SearchTextBox2").SendKeys ActiveSheet.Range("B21").Value
+    cd.FindElementById("MainContent_SearchDropDownList2").SendKeys ActiveSheet.Range("A21").Value
+    cd.FindElementById("MainContent_SearchTextBox3").SendKeys ActiveSheet.Range("B22").Value
+    cd.FindElementById("MainContent_SearchDropDownList3").SendKeys ActiveSheet.Range("A22").Value
+    cd.FindElementById("MainContent_AllStateButton1").Click
+    On Error Resume Next
+    Set ResultSection = cd.FindElementByClass("GridViewHeader")
+    Set ResultTable = ResultSection.FindElementByTag("tbody")
+
+    Sheets.Add.Name = "New"
+    On Error Resume Next
+    ResultTable.AsTable.ToExcel ThisWorkbook.Sheets("New").Range("A1")
+    
+    'Set ResultSection = ch.FindElementByClass("table-responsive")
+    'Set ResultTable = ResultSection.FindElementByTag("table")
+    
+    'ResultTable.AsTable.ToExcel ThisWorkbook.Worksheets.Add.Range("A1")
+    
+    x = 2
+    y = 53
+
+    Do Until x = 3
+        On Error Resume Next
+        cd.FindElementByXPath("//*[@id='MainContent_GridView1']/tbody/tr[52]/td/table/tbody/tr/td[" & x & "]/a").ScrollIntoView
+        cd.FindElementByXPath("//*[@id='MainContent_GridView1']/tbody/tr[52]/td/table/tbody/tr/td[" & x & "]/a").Click
+    
+        Set ResultSection = cd.FindElementByClass("GridViewHeader")
+        Set ResultTable = ResultSection.FindElementByTag("tbody")
+    
+        ResultTable.AsTable.ToExcel ThisWorkbook.Sheets("New").Cells(y, 1)
+        
+        x = x + 1
+        y = y + 52
+
+    Loop
+    
+    a = 104
+    
+    Do Until Sheets("Sheet1").Range("E20") = Sheets("Sheet1").Range("B24").Value
+        Sheets("Sheet1").Range("E20") = Sheets("Sheet1").Range("E20") + 1
+        cd.GoBack
+        cd.FindElementById("MainContent_SearchTextBox1").Clear
+        'cd.Wait "3000"
+        cd.FindElementById("MainContent_SearchTextBox1").SendKeys Sheets("Sheet1").Range("B20").Value
+        cd.FindElementById("MainContent_AllStateButton1").Click
+        
+        Set ResultSection2 = cd.FindElementByClass("GridViewHeader")
+        Set ResultTable1 = ResultSection2.FindElementByTag("tbody")
+
+        ResultTable1.AsTable.ToExcel ThisWorkbook.Sheets("New").Cells(a, 1)
+    
+        Z = 2
+        b = a + 52
+        On Error Resume Next
+        Do Until Z = 3
+            cd.FindElementByXPath("//*[@id='MainContent_GridView1']/tbody/tr[52]/td/table/tbody/tr/td[" & Z & "]/a").ScrollIntoView
+            cd.FindElementByXPath("//*[@id='MainContent_GridView1']/tbody/tr[52]/td/table/tbody/tr/td[" & Z & "]/a").Click
+    
+            Set ResultSection = cd.FindElementByClass("GridViewHeader")
+            Set ResultTable = ResultSection.FindElementByTag("tbody")
+    
+            ResultTable.AsTable.ToExcel ThisWorkbook.Sheets("New").Cells(b, 1)
+        
+            Z = Z + 1
+            b = b + 52
+        Loop
+    
+    a = a + 104
+    
+    Loop
+    Call captureendtime
+End Sub
+
+'To sort list in Data
+Sub sortColumn()
+Sheets("New").Range("A2:A100000").WrapText = False
+Sheets("New").Range("A2:A100000").Clear
+Sheets("New").Range("A2:R100000").Sort Key1:=Sheets("New").Range("D1"), Order1:=xlDescending
+End Sub
+
+Sub sortColumn2()
+Sheets("New").Range("A2:V100000").WrapText = False
+Sheets("New").Range("A3:V100000").Sort Key1:=Sheets("New").Range("A2"), Order1:=xlAscending
+End Sub
+
+'To delete row in Data
+Sub DeleteLabNoRow()
+With Sheets("New")
+    .AutoFilterMode = False
+    With Sheets("New").Range("D1", Range("D" & Rows.Count).End(xlUp))
+        .AutoFilter 1, "LabNo"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+End Sub
+
+Sub DeleteHeaderRow()
+With Sheets("New")
+    .AutoFilterMode = False
+    With Sheets("New").Range("A1", Range("A" & Rows.Count).End(xlUp))
+        .AutoFilter 1, "LabNo"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+End Sub
+
+Sub DeleteCovidRow()
+With Sheets("New")
+    .AutoFilterMode = False
+    With Sheets("New").Range("L1", Range("L" & Rows.Count).End(xlUp))
+        .AutoFilter 1, "*COVID*"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+
+End Sub
+
+Sub DeleteTestedRow()
+With Sheets("New")
+    .AutoFilterMode = False
+    With Sheets("New").Range("Q1", Range("Q" & Rows.Count).End(xlUp))
+        .AutoFilter 1, "Tested"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+
+End Sub
+
+Sub DeleteRequestedRow()
+With Sheets("New")
+    .AutoFilterMode = False
+    With Sheets("New").Range("Q1", Range("Q" & Rows.Count).End(xlUp))
+        .AutoFilter 1, "Requested"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+End Sub
+
+'To run multiple macro in a click
+Sub HousekeepingData()
+Call sortColumn
+Sheets("New").Activate
+Call DeleteCovidRow
+Call DeleteTestedRow
+Call DeleteRequestedRow
+Call DeleteLabNoRow
+Sheets("New").Range("A:Z").WrapText = False
+End Sub
+
+
+'New Code
+'Get user to fill in login credential and workingfile destination
+'create user form with 3 textarea, 2 button
+Private Sub CommandButton1_Click()
+Sheets("Dashboard").Range("B5").Value = TextBox3.Value
+Sheets("Dashboard").Range("B6").Value = TextBox2.Value
+Sheets("Dashboard").Range("A17").Value = TextBox4.Value
+Sheets("Backend").Range("A17").Value = TextBox4.Value
+Sheets("GroupEmail").Range("A17").Value = TextBox4.Value
+Unload Me
+
+End Sub
+
+Private Sub CommandButton2_Click()
+Unload Me
+
+End Sub
+
+Private Sub Label1_Click()
+
+End Sub
+
+Private Sub Label3_Click()
+
+End Sub
+
+Private Sub UserForm_Initialize()
+    TextBox3.SetFocus
+End Sub
+
+Private Sub UserForm_Click()
+Unload Me
+End Sub
+
+'To get confirmation from user who verify
+'create user form with 1 textarea, 2 button
+Private Sub CommandButton1_Click()
+Sheets("Dashboard").Range("F10").Value = TextBox1.Value
+Unload Me
+Call Emailing.SendPDFtoEmail
+End Sub
+
+Private Sub CommandButton2_Click()
+Unload Me
+
+End Sub
+
+
+Private Sub UserForm_Click()
+Unload Me
+End Sub
+
+'Allow user prompt login pop up, copy this to a module
+Sub CommandButton_Click()
+UserForm1.Show
+End Sub
+
+Sub Command2ndButton_Click()
+UserForm2.Show
+End Sub
+
+
+'To provide default changes once opening excel
+'Copy this to WORKBOOK
+Private Sub Workbook_Open()
+Sheets("Dashboard").Activate
+Sheets("Dashboard").Range("B5").Value = ""
+Sheets("Dashboard").Range("B6").Value = ""
+Sheets("Dashboard").Range("A17").Value = ""
+Sheets("Backend").Range("A17").Value = ""
+Sheets("GroupEmail").Range("A17").Value = ""
+Sheets("Dashboard").Range("C15").Value = 19
+UserForm1.Show
+Sheets("Dashboard").Shapes("Button1").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button2").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button3").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button4").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button5").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button6").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button7").Fill.ForeColor.RGB = RGB(0, 0, 255)
+Sheets("Dashboard").Shapes("Button1").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button2").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button3").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button4").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button5").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button6").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+Sheets("Dashboard").Shapes("Button7").TextFrame.Characters.Font.Color = RGB(255, 255, 255)
+End Sub
+
+'To create folder according to cell value
+Sub CreateClinicFolder() 'PLace the name of the folder in A1
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click
+Dim x As Integer
+    
+    x = 19
+    
+    Do Until x = Sheets("Dashboard").Range("B15").Value
+        On Error Resume Next
+        MkDir Sheets("Dashboard").Range("M" & x)
+        x = x + 1
+    Loop
+
+Call FSOMoveFile
+Call MovePDFsToAnotherFolder
+Call CaptureTime.captureendtime
+End Sub
+
+'To move existing single file to new folder
+Sub FSOMoveFile()
+    Dim FSO As New FileSystemObject
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+
+Dim x As Integer
+    
+    x = 19
+    Do Until x = Sheets("Dashboard").Range("B15").Value
+        FSO.MoveFile Sheets("Dashboard").Range("L" & x), Sheets("Dashboard").Range("N" & x) 
+        x = x + 1
+    Loop
+
+End Sub
+
+'To undo move file
+Sub FSOReverseMoveFile()
+    Dim FSO As New FileSystemObject
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+
+Dim x As Integer
+    
+    x = 19
+    Do Until x = Sheets("Dashboard").Range("B15").Value
+        FSO.MoveFile Sheets("Dashboard").Range("N" & x), Sheets("Dashboard").Range("L" & x)
+        x = x + 1
+    Loop
+
+Call Emailing.DeleteSubfolders
+
+End Sub
+
+'To move all pdfs
+Sub MovePDFsToAnotherFolder()
+
+MkDir Sheets("Dashboard").Range("A17") & "\" & "No Email"
+
+Dim FSO As Object, sourcePath As String, destPath As String
+Dim Fldr As Object, f As Object, ct As Long
+sourcePath = Sheets("Dashboard").Range("A17") & "\"  'Change path and folder name to suit
+destPath = Sheets("Dashboard").Range("A17") & "\" & "No Email" & "\" 'Change path and folder name to suit
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Set Fldr = FSO.GetFolder(sourcePath).Files
+For Each f In Fldr
+    If f.Name Like "*.pdf*" Or f.Name Like "*PDF*" Then
+        ct = ct + 1
+        FSO.MoveFile Sheets("Dashboard").Range("A17") & "\" & f.Name, Sheets("Dashboard").Range("A17") & "\" & "No Email" & "\" & f.Name
+    End If
+Next f
+If ct > 0 Then
+    MsgBox ct & " pdf files have no email address"
+Else
+    MsgBox "No pdf files have no email address"
+End If
+End Sub
+
+'To get original data into Working table sheet
+Sub CopytoGroupEmail()
+Sheets("GroupEmail").Range("A19:B400").Clear
+Sheets("Dashboard").Range("A19:Z400").Copy
+Sheets("GroupEmail").Range("A19:Z400").PasteSpecial xlPasteValues
+End Sub
+
+'To remove duplicate row
+Sub Remove_Duplicates_Clinic()
+
+  Sheets("GroupEmail").Range("A18:Z400").RemoveDuplicates Columns:=13, Header:=xlYes
+
+End Sub
+
+'To find error and delete row
+Sub DeleteErrorClinic()
+Dim Rng As Range
+Dim WorkRng As Range
+On Error Resume Next
+Set WorkRng = Sheets("Dashboard").Range("F19:F400")
+Do
+    Set Rng = WorkRng.Find("00 NOT FOUND", LookIn:=xlValues)
+    If Not Rng Is Nothing Then
+        Rng.EntireRow.Delete
+    End If
+Loop While Not Rng Is Nothing
+Application.ScreenUpdating = True
+End Sub
+
+'To send email according to respective customer with attached pdf
+Sub SendPDFtoEmail()
+If MsgBox("Note01: Have you verified the list?" & vbCrLf & "Note02: Have you opened Outlook app?", vbYesNo) = vbNo Then Exit Sub
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click
+Call DeleteErrorClinic
+Call CopytoGroupEmail
+Call Remove_Duplicates_Clinic
+
+Dim OutlookApp As Object
+Dim OutlookMailItem As Object
+Dim myAttachments As Object
+Dim attachPath As String
+Dim fsFolder As Object
+Dim fsFile As Object
+
+Dim count, x As Integer
+x = 19
+Do Until x = Sheets("GroupEmail").Range("B15").Value
+    strFolder = Sheets("GroupEmail").Range("M" & x).Value
+    Set OutlookApp = CreateObject("Outlook.application")
+    Set OutlookMailItem = OutlookApp.CreateItem(0)
+    Set myAttachments = OutlookMailItem.Attachments
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fsFolder = FSO.GetFolder(strFolder)
+    'attachPath = Range("H" & x).Value
+    With OutlookMailItem
+        .To = Sheets("GroupEmail").Range("i" & x)
+        .Subject = Sheets("GroupEmail").Range("j" & x)
+        .Body = Sheets("GroupEmail").Range("k" & x)
+        'myAttachments.Add attachPath
+        For Each fsFile In fsFolder.Files
+            If fsFile.Name Like "*.pdf" Then
+                .Attachments.Add strFolder & "\" & fsFile.Name
+            End If
+        Next
+        .send
+    End With
+    Set OutlookMailItem = Nothing
+    Set OutlookApp = Nothing
+    
+    x = x + 1
+        
+Loop
+
+Call Move_Folder
+Call DeleteSubfolders
+Call CaptureTime.captureendtime
+
+End Sub
+
+'To send email according to respective customer with attached pdf with validation
+Sub SendPDFtoEmail2()
+If Sheets("Dashboard").Range("D5").Value = "ERROR" Then
+Exit Sub
+ElseIf Sheets("Dashboard").Range("D5").Value = "Proceed" Then
+If MsgBox("Note01: Have you verified the list?" & vbCrLf & "Note02: Have you opened Outlook app?", vbYesNo) = vbNo Then Exit Sub
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click
+Call DeleteErrorClinic
+
+Dim OutlookApp As Object
+Dim OutlookMailItem As Object
+Dim myAttachments As Object
+Dim attachPath As String
+Dim fsFolder As Object
+Dim fsFile As Object
+
+Dim count, x As Integer
+x = 19
+Do Until x = Sheets("Dashboard").Range("B15").Value
+    strFolder = Sheets("Dashboard").Range("M" & x).Value
+    Set OutlookApp = CreateObject("Outlook.application")
+    Set OutlookMailItem = OutlookApp.CreateItem(0)
+    Set myAttachments = OutlookMailItem.Attachments
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set fsFolder = FSO.GetFolder(strFolder)
+    attachPath = Sheets("Dashboard").Range("N" & x).Value
+    With OutlookMailItem
+        .To = Sheets("Dashboard").Range("i" & x)
+        .BCC = Sheets("Dashboard").Range("p" & x)
+        .Subject = Sheets("Dashboard").Range("j" & x)
+        .Body = Sheets("Dashboard").Range("k" & x)
+        myAttachments.Add attachPath
+        .send
+    End With
+    Set OutlookMailItem = Nothing
+    Set OutlookApp = Nothing
+    
+    x = x + 1
+        
+Loop
+
+Call Move_Folder
+Call DeleteSubfolders
+Call CaptureTime.captureendtime
+End If
+End Sub
+
+
+Sub SearchnkeyinRemarkCS()
+    Call CaptureTime.CaptureTime
+    Call FilenMyShape.MyShape_Click
+    Sheets("Dashboard").Range("A18:Z400").RemoveDuplicates Columns:=3, Header:=xlYes
+    If MsgBox("Do you want to continue previous remark? Press No for new list", vbYesNo) = vbNo Then Sheets("Dashboard").Range("C15").Value = 19
+    
+    Set cd = New Selenium.ChromeDriver
+    cd.Start
+    cd.Get "http://Login.aspx"
+    cd.FindElementByName("UserTextBox1").SendKeys Sheets("Dashboard").Range("B5").Value
+    cd.FindElementByName("PassTextBox1").SendKeys Sheets("Dashboard").Range("B6").Value
+    cd.FindElementByName("LoginButton1").Click
+    
+    cd.ExecuteScript "window.open(arguments[0])", "http://CSRequest.aspx"
+    cd.SwitchToNextWindow
+    cd.FindElementById("MainContent_ReceivedFromSearchTextBox1").Clear
+    cd.FindElementById("MainContent_ReceivedToSearchTextBox1").Clear
+
+    Do Until Range("C15") = Sheets("Dashboard").Range("B15").Value
+        cd.FindElementById("MainContent_SearchTextBox1").Clear
+        cd.FindElementById("MainContent_SearchTextBox1").SendKeys Sheets("Dashboard").Range("C11").Value
+        cd.FindElementById("MainContent_SearchDropDownList1").SendKeys Sheets("Dashboard").Range("A11").Value
+        cd.FindElementById("MainContent_AllStateButton1").Click
+        cd.FindElementById("MainContent_GridView1_ViewLinkButton1_0").Click
+        cd.Wait "1000" '1 sec
+        cd.SwitchToNextWindow
+
+
+        cd.FindElementById("MainContent_RemarkCSTextBox1").SendKeys Sheets("Dashboard").Range("C14").Value
+        cd.FindElementById("MainContent_SaveButton1").Click
+        'cd.Wait "1000" '1 sec
+    
+        cd.Window.Close
+        cd.SwitchToPreviousWindow
+        Range("C15") = Range("C15") + 1
+        
+    Loop
+    
+    cd.Wait "2000" '2 sec
+Call CaptureTime.captureendtime
+End Sub
+
+'Once done with routine work, move everyting to DONE
+Sub Move_Folder()
+
+MkDir Sheets("Backend").Range("A1") & "\" & Sheets("Backend").Range("A2")
+'This example copy all files and subfolders from FromPath to ToPath.
+'Note: If ToPath already exist it will overwrite existing files in this folder
+'if ToPath not exist it will be made for you.
+    Dim FSO As Object
+    Dim FromPath As String
+    Dim ToPath As String
+
+    FromPath = Sheets("Dashboard").Range("A17").Value
+    ToPath = Sheets("Backend").Range("A1") & "\" & Sheets("Backend").Range("A2")
+
+    Set FSO = CreateObject("scripting.filesystemobject")
+
+    If FSO.FolderExists(FromPath) = False Then
+        MsgBox FromPath & " doesn't exist"
+        Exit Sub
+    End If
+
+    FSO.CopyFolder Source:=FromPath, Destination:=ToPath
+    MsgBox "You can find the files and subfolders in " & ToPath
+
+End Sub
+
+
+Sub DeleteSubfolders()
+    
+    'Variable declaration
+    Dim sFolderPath As String
+    Dim FSO As Object
+    
+     'Define Folder Path
+    sFolderPath = Sheets("Dashboard").Range("A17").Value
+    
+    'Check if slash is added
+    If Right(sFolderPath, 1) = "\" Then
+        'If added remove it from the specified path
+        sFolderPath = Left(sFolderPath, Len(sFolderPath) - 1)
+    End If
+    
+    'Create FSO Object
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    
+    'Check Specified Folder exists or not
+    If FSO.FolderExists(sFolderPath) Then
+                        
+          'Delete All Subfolders
+          FSO.DeleteFolder sFolderPath & "\*.*", True
+          
+     End If
+    
+End Sub
+
+'New code
+'To get the list of files in a folder
+Sub LoopThroughFiles()
+
+Dim oFSO As Object
+Dim oFolder As Object
+Dim oFile As Object
+Dim i As Integer
+Sheets("Backend").Range("A19:B400").Clear
+Set oFSO = CreateObject("Scripting.FileSystemObject")
+
+Set oFolder = oFSO.GetFolder(Sheets("Backend").Range("A17").Value)
+i = 18
+
+For Each oFile In oFolder.Files
+
+    Sheets("Backend").Cells(i + 1, 1) = oFile.Name
+    Sheets("Backend").Cells(i + 1, 2) = oFile.DateLastModified
+
+    i = i + 1
+
+Next oFile
+
+End Sub
+
+Sub CopytoDashboard()
+Sheets("Dashboard").Range("A19:B400").Clear
+Sheets("Backend").Range("A19:Z400").Copy
+Sheets("Dashboard").Range("A19:Z400").PasteSpecial xlPasteValues
+End Sub
+
+Sub sortColumn()
+Sheets("Dashboard").Range("A19:Z400").Sort Key1:=Sheets("Dashboard").Range("F18"), Order1:=xlAscending
+End Sub
+
+Sub DeleteZeroRow()
+With Sheets("Dashboard")
+    .AutoFilterMode = False
+    With Range("I18", Range("I" & Rows.count).End(xlUp))
+        .AutoFilter 1, "0"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+End Sub
+
+Sub DeleteErrorRow()
+With Sheets("Dashboard")
+    .AutoFilterMode = False
+    With Range("I18", Range("I" & Rows.count).End(xlUp))
+        .AutoFilter 1, "#N/A"
+        On Error Resume Next
+        .Offset(1).SpecialCells(12).EntireRow.Delete
+    End With
+    .AutoFilterMode = False
+End With
+End Sub
+
+'Combining get file names, sort, delete, copy to dashboard
+Sub LoopFileandSort()
+If MsgBox("Note01: Have you move the downloaded pdfs into your workingfile?" & vbCrLf & "Note02: Have you move scanned NICC_Extended into workingfile?", vbYesNo) = vbNo Then Exit Sub
+    Call CaptureTime.CaptureTime
+    Call FilenMyShape.MyShape_Click
+    Call LoopThroughFiles
+    Call CopytoDashboard
+    'Call sortColumn
+    Call DeleteZeroRow
+    Call DeleteErrorRow
+    Sheets("Dashboard").Range("A19:Z400").Sort Key1:=Sheets("Dashboard").Range("I18"), Order1:=xlDescending
+    Sheets("Dashboard").Range("B19:B400").NumberFormat = "dd/mm/yyyy hh:mm"
+    Sheets("Dashboard").Range("D19:D400").NumberFormat = "dd/mm/yyyy"
+    Call CaptureTime.captureendtime
+End Sub
+
+'To convert each PDF to Word from destination folder
+Option Explicit
+
+Sub PDF_to_Word()
+
+'Dim sh As Worksheet
+'Set sh = ThisWorkbook.Sheets("Dashboard")
+Call Delete_All_Files
+Dim FSO As New FileSystemObject
+Dim fo As Scripting.Folder
+Dim f As File
+
+Dim wa As New Word.Application
+Dim doc As Word.Document
+
+wa.Visible = True
+
+Dim pdf_path As String
+Dim word_path As String
+
+pdf_path = Sheets("Dashboard").Range("N2").Value
+word_path = Sheets("Dashboard").Range("X2").Value
+
+Set fo = FSO.GetFolder(pdf_path)
+
+For Each f In fo.Files
+    Set doc = wa.Documents.Open(f.Path)
+    doc.SaveAs2 (word_path & "\" & Replace(f.Name, ".pdf", ".docx"))
+    doc.Close False
+Next
+wa.Quit
+End Sub
+
+'To open PDF with Word, loop through text and return to excel
+Sub FindnExtractpdfToTable()
+Sheets("HL-rename (2)").Activate
+Sheets("HL-rename (2)").Range("A:C").ClearContents
+Sheets("HL-rename (2)").Range("G:G").ClearContents
+    ' Set the folder path containing the Word documents
+    Dim folderPath As String
+    'folderPath = Sheets("Dashboard").Range("X2").Value & "\"
+    folderPath = Sheets("Dashboard").Range("N2").Value & "\"
+    ' Create a new worksheet
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("HL-rename (2)")
+    
+    ' Set the initial row and column
+    Dim startRow As Long
+    Dim startColumn As Long
+    startRow = 2
+    startColumn = 2
+    
+    ' Set the column headers
+    ws.Range("A1").Value = "Word Document"
+    
+    ' Loop through all Word documents in the folder
+    Dim fileName As String
+    'fileName = Dir(folderPath & "*.docx")
+    fileName = Dir(folderPath & "*.pdf")
+    Application.Wait (Now + TimeValue("0:00:01"))
+    Do While fileName <> ""
+       
+        ' Add the Word document name to the table
+        ws.Cells(startRow, 1).Value = fileName
+        
+        ' Open the Word document
+        Dim wa As New Word.Application
+        Dim doc As Word.Document
+        Dim cRng As Word.Range
+        Dim cRng1 As Word.Range
+        Dim cRng2 As Word.Range
+        
+'        Dim i As Long
+'        i = 2
+        wa.Visible = True
+        Set doc = wa.Documents.Open(folderPath & fileName)
+        ' Loop through the text boxes in the document
+        'Set doc = ActiveDocument
+
+        Set cRng = doc.Content
+        cRng.Find.ClearFormatting
+        With cRng.Find
+            .Forward = True
+            .Text = "Tests Requested:" & vbCr
+            .Wrap = wdFindStop
+            .Execute
+            Do While .Found
+                cRng.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                cRng.MoveEndUntil cset:=vbCr
+                Cells(startRow, 2) = cRng
+                cRng.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                .Execute
+            Loop
+        End With
+        
+        Set cRng1 = doc.Content
+        cRng1.Find.ClearFormatting
+        With cRng1.Find
+            .Forward = True
+            .Text = "CYTOLOGY - "
+            .Wrap = wdFindStop
+            .Execute
+            Do While .Found
+                cRng1.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                cRng1.MoveEndUntil cset:=vbCr
+                Cells(startRow, 3) = cRng1
+                cRng1.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                .Execute
+            Loop
+        End With
+        
+        Set cRng2 = doc.Content
+        cRng2.Find.ClearFormatting
+        With cRng2.Find
+            .Forward = True
+            .Text = "SPECIMEN"
+            .Wrap = wdFindStop
+            .Execute
+            Do While .Found
+                cRng2.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                cRng2.MoveEndUntil cset:=vbCr
+                Cells(startRow, 7) = cRng2
+                cRng2.Collapse Word.WdCollapseDirection.wdCollapseEnd
+                .Execute
+            Loop
+        End With
+        
+
+        doc.Close False
+        
+        ' Get the next file name
+        fileName = Dir()
+        
+        ' Move to the next row
+        startRow = startRow + 1
+    Loop
+    ' Cleanup
+    wa.Quit
+    Sheets("Dashboard").Activate
+End Sub
+
+'To find all files and return list to table
+Sub FindpdfToTable()
+Dim oFSO As Object
+Dim oFolder As Object
+Dim oFile As Object
+Dim i As Integer
+Sheets("HL-rename (2)").Range("H2:I400").Clear
+Set oFSO = CreateObject("Scripting.FileSystemObject")
+
+Set oFolder = oFSO.GetFolder(Sheets("HL-rename (2)").Range("L1").Value)
+i = 1
+
+For Each oFile In oFolder.Files
+
+    Sheets("HL-rename (2)").Cells(i + 1, 8) = oFile.Name
+    Sheets("HL-rename (2)").Cells(i + 1, 9) = oFile.DateLastModified
+
+    i = i + 1
+
+Next oFile
+
+Set oFSO = Nothing
+Set oFolder = Nothing
+Set oFile = Nothing
+End Sub
+
+'To rename each pdf according to cell value
+Sub Renamafile()
+    'Call FilenMyShape.MyShape_Click
+    Dim x As Integer
+    x = 2
+    Do Until x = 100
+    On Error Resume Next
+        Name Sheets("HL-rename (2)").Range("E" & x) As _
+    Sheets("HL-rename (2)").Range("F" & x)
+        x = x + 1
+    Loop
+    
+End Sub
+
+'To count each pdf pages and return to excel table
+Sub PDFLHpages()
+    Call FilenMyShape.MyShape_Click
+    Dim i As Long
+    Dim xRg As Range
+    Dim xStr As String
+    Dim xFdItem As Variant
+    Dim xFileName As String
+    Dim xFileNum As Long
+    Dim RegExp As Object
+        xFdItem = Sheets("HL-rename").Range("E1").Value & Application.PathSeparator 'Put your folder location in this cell
+        xFileName = Dir(xFdItem & "*.pdf", vbDirectory)
+        Set xRg = Sheets("HL-rename").Range("A1")
+        Sheets("HL-rename").Range("A:B").ClearContents
+        Sheets("HL-rename").Range("A1:B1").Font.Bold = True
+        xRg = "File Name"
+        xRg.Offset(0, 1) = "Pages"
+        i = 2
+        xStr = ""
+        Do While xFileName <> ""
+            Sheets("HL-rename").Cells(i, 1) = xFileName
+            Set RegExp = CreateObject("VBscript.RegExp")
+            RegExp.Global = True
+            RegExp.Pattern = "/Type\s*/Page[^s]"
+            xFileNum = FreeFile
+            Open (xFdItem & xFileName) For Binary As #xFileNum
+                xStr = Space(LOF(xFileNum))
+                Get #xFileNum, , xStr
+            Close #xFileNum
+            Sheets("HL-rename").Cells(i, 2) = RegExp.Execute(xStr).Count
+            i = i + 1
+            xFileName = Dir
+        Loop
+        Sheets("HL-rename").Columns("A:B").AutoFit
+    
+End Sub
+
+'Transform - Create new folder with naming of each category with all file count inside it
+'Create a table for populating file count on Reference Sheet
+'To count files in folder before renaming it
+Sub CountFiles2()
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click2
+Dim objFSO As Object
+Dim objFolder As Object
+Dim objSubFolder As Object
+Dim objFolder2 As Object
+Dim objSubFolder2 As Object
+Dim i As Integer
+
+'Create an instance of the FileSystemObject
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+'Get the folder object
+Set objFolder = objFSO.GetFolder(Sheets("Dashboard").Range("M2").Value)
+Sheets("Reference").Range("M2:N40").Clear
+i = 1
+'loops through each file in the directory and prints their names and path
+For Each objSubFolder In objFolder.SubFolders
+    'print folder name
+    Sheets("Reference").Cells(i + 1, 13) = objSubFolder.Name
+    'print folder path
+    Sheets("Reference").Cells(i + 1, 14) = objSubFolder.Path
+    i = i + 1
+Next objSubFolder
+
+Set objFolder2 = objFSO.GetFolder(Sheets("Dashboard").Range("M1").Value)
+j = 20
+'loops through each file in the directory and prints their names and path
+For Each objSubFolder2 In objFolder2.SubFolders
+    'print folder name
+    Sheets("Reference").Cells(j + 1, 13) = objSubFolder2.Name
+    'print folder path
+    Sheets("Reference").Cells(j + 1, 14) = objSubFolder2.Path
+    j = j + 1
+Next objSubFolder2
+
+Dim MyFolder As String
+Dim MyFile As String
+Dim x As Integer
+x = 2
+
+Do Until x = 40
+    On Error Resume Next
+    MyFolder = Sheets("Reference").Range("N" & x)
+    MyFile = Dir(MyFolder & "*.pdf")
+    Set Folder_Access = CreateObject("Scripting.FileSystemObject")
+    Set Folder = Folder_Access.GetFolder(MyFolder)
+    Count = 0
+    For Each File In Folder.Files
+        Count = Count + 1
+    Next File
+    Sheets("Reference").Range("O" & x).Value = Count
+    x = x + 1
+
+Loop
+
+Dim a As Integer
+a = 2
+
+Do Until a = 40
+    Dim sFolder_OldName As String
+    Dim sFolder_NewName As String
+    On Error Resume Next
+    sFolder_OldName = Sheets("Reference").Range("N" & a)
+    sFolder_NewName = Sheets("Reference").Range("P" & a)
+    Name sFolder_OldName As sFolder_NewName
+    a = a + 1
+
+Loop
+
+Set objFSO = Nothing
+Set objFolder = Nothing
+Set objSubFolder = Nothing
+Set objFolder2 = Nothing
+Set objSubFolder2 = Nothing
+'Call IncompletebacktoHL
+Call CaptureTime.captureendtime
+End Sub
+
+Sub CopytoDashboard()
+Sheets("Dashboard").Range("A19:Z400").Clear
+Sheets("NLfolder").Range("A2:Z383").Copy
+Sheets("Dashboard").Range("A19:Z400").PasteSpecial xlPasteValues
+Sheets("Dashboard").Range("A18:Z400").RemoveDuplicates Columns:=5, Header:=xlYes
+End Sub
+
+Sub CreateLHFolder() 'PLace the name of the folder in A1
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click
+Dim x As Integer
+    
+    x = 19
+    
+    Do Until x = 500
+        On Error Resume Next
+        MkDir Sheets("LHfolder").Range("T" & x)
+        x = x + 1
+    Loop
+
+Call FSOmoveLHtoCS
+Call CaptureTime.captureendtime
+End Sub
+
+Sub RenamaLHfile()
+    
+    x = 2
+    Do Until x = 500
+    On Error Resume Next
+        Name Sheets("LHfolder").Range("P" & x) As _
+    Sheets("LHfolder").Range("Q" & x)
+        x = x + 1
+    Loop
+    
+End Sub
+
+Sub FSOMoveLHFile()
+    Dim FSO As New FileSystemObject
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+
+Dim x As Integer
+    
+    x = 2
+    Do Until x = 500
+        On Error Resume Next
+        FSO.Movefile Sheets("LHfolder").Range("Q" & x), Sheets("LHfolder").Range("R" & x)
+        x = x + 1
+    Loop
+Set FSO = Nothing
+
+End Sub
+
+Sub TransformLH()
+Call CaptureTime.CaptureTime
+Call FilenMyShape.MyShape_Click
+    Call RenamaLHfile
+    Call FSOMoveLHFile
+Call CaptureTime.captureendtime
+End Sub
+
+Sub TransformLHNL()
+    Call CaptureTime.CaptureTime
+    Call FilenMyShape.MyShape_Click
+    Call LoopFilesnSort.LoopThroughLH
+    Call RenamaLHfile
+    Call CaptureTime.captureendtime
+Sheets("Dashboard").Activate
+MsgBox "Your pdfs are now renamed"
+End Sub
+
+'To create archive folder with current date
+Sub Create_ArchiveFolder_LH()
+    
+    'Variable declaration
+    Dim sFolderName As String, sFolder As String
+    Dim sFolderPath As String
+       
+    'Main Folder
+    sFolder = Sheets("Dashboard").Range("M1").Value & "\Archive\"
+    
+    'Folder Name
+    sFolderName = Format(Now, "YYYYMMDD_HHMM")
+    
+    'Folder Path
+    sFolderPath = sFolder & sFolderName
+        
+    'Create FSO Object
+    Set oFSO = CreateObject("Scripting.FileSystemObject")
+    
+    'Check Specified Folder exists or not
+    If oFSO.FolderExists(sFolderPath) Then
+        'If folder is available with today's date
+        MsgBox "Folder already exists  with today's date!", vbInformation, "VBAF1"
+        Exit Sub
+    Else
+        'Create Folder
+        MkDir sFolderPath
+    End If
+    Dim MyFile1 As String
+    Dim myPath1 As String, myPath2 As String
+
+    myPath1 = Sheets("Dashboard").Range("M1").Value & "\"
+    myPath2 = sFolderPath & "\"
+    MyFile1 = Dir(myPath1 & "*.*")
+    Do While MyFile1 <> ""
+        FileCopy myPath1 & MyFile1, myPath2 & MyFile1
+        MyFile1 = Dir
+    Loop
+    
+End Sub
+
+
+Sub MovePDF()
+    Call CaptureTime.CaptureTime
+    Call FilenMyShape.MyShape_Click
+    Call FSOMoveLHFile
+Sheets("Dashboard").Activate
+MsgBox "Your pdfs are now moved put into TEST folder"
+End Sub
+
+Sub RenameHL2()
+    Call CaptureTime.CaptureTime
+    Call FilenMyShape.MyShape_Click
+    Call Convertdata.FindnExtractpdfToTable
+    Call Convertdata.RenamaNLHLfile2
+    Call Convertdata.RenamaLHHLfile2
+    Call CaptureTime.captureendtime
+Sheets("Dashboard").Activate
+MsgBox "Your pdfs are now moved put into TEST folder"
+End Sub
+
+'To validate each pdf pages, use loop through and return file name with pages
+Sub MainList()
+Sheets("Backend").Range("A8:B10000").Clear
+Set folder = Application.FileDialog(msoFileDialogFolderPicker)
+If folder.Show <> -1 Then Exit Sub
+xDir = folder.SelectedItems(1)
+Call ListFilesInFolder(xDir, True)
+End Sub
+
+Sub ListFilesInFolder(ByVal xFolderName As String, ByVal xIsSubfolders As Boolean)
+Dim xFileSystemObject As Object
+Dim xFolder As Object
+Dim xSubFolder As Object
+Dim xFile As Object
+Dim rowIndex As Long
+Set xFileSystemObject = CreateObject("Scripting.FileSystemObject")
+Set xFolder = xFileSystemObject.GetFolder(xFolderName)
+rowIndex = Application.ActiveSheet.Range("A65536").End(xlUp).Row + 1
+For Each xFile In xFolder.Files
+  Application.Sheets("Backend").Cells(rowIndex, 1).Formula = xFile.Name
+  Application.Sheets("Backend").Cells(rowIndex, 2).Formula = xFile.DateLastModified
+  rowIndex = rowIndex + 1
+Next xFile
+If xIsSubfolders Then
+  For Each xSubFolder In xFolder.SubFolders
+    ListFilesInFolder xSubFolder.Path, True
+  Next xSubFolder
+End If
+Set xFile = Nothing
+Set xFolder = Nothing
+Set xFileSystemObject = Nothing
+End Sub
+
+'New Code
+'To download all attached files from date mention till now from outlook
+'First create Dashboard with Defined data names like UserName, Mailbox_Name, Date, Export_to, Time_Taken, etc...
+'Copy below to a new module
+Option Explicit
+
+'app --> name space --> inbox --> items --> Mailitems --> Attachment
+
+Sub download_attachments()
+Call FilenMyShape.MyShape_Click
+Dim olApp As Outlook.Application
+Dim olNS As Outlook.Namespace
+Dim olFolder As Outlook.MAPIFolder
+Dim olItem As Object
+Dim mailitem As Outlook.mailitem
+Dim olAtt As Outlook.Attachment
+
+Dim startTime As Date
+Dim endTime As Date
+Dim UserName As String
+Dim timetaken As Date
+
+startTime = Now()
+'On Error GoTo ErrX
+
+Set olApp = New Outlook.Application
+Set olNS = olApp.GetNamespace("MAPI")
+
+Set olFolder = olNS.Folders([Mailbox_Name].Text)
+Set olFolder = olFolder.Folders("LIMS & IT dept")
+Set olFolder = olFolder.Folders("03 - Company integration")
+Set olFolder = olFolder.Folders("IQreportStatus")
+
+For Each olItem In olFolder.Items
+
+    If olItem.Class = olMail Then
+        Set mailitem = olItem
+        
+        Debug.Print mailitem.Subject
+        Debug.Print mailitem.ReceivedTime
+        
+        If mailitem.ReceivedTime > [Date].Value Then
+        
+            For Each olAtt In mailitem.Attachments
+                olAtt.SaveAsFile [Export_To].Text & "\" & olAtt.Filename
+            Next olAtt
+        End If
+    
+    End If
+Next olItem
+
+Set olApp = Nothing
+Set olNS = Nothing
+Set olFolder = Nothing
+Set olItem = Nothing
+Set mailitem = Nothing
+Set olAtt = Nothing
+
+endTime = Now()
+timetaken = startTime - endTime
+
+[Status].Value = "Success"
+[Start_Time].Value = startTime
+[Time_Taken].Value = Format(timetaken, "HH:MM:SS")
+[User_Name].Value = Environ("UserName")
+
+Exit Sub
+ErrX:
+endTime = Now()
+timetaken = startTime - endTime
+
+[Status].Value = "Failed"
+[Start_Time].Value = startTime
+[Time_Taken].Value = Format(timetaken, "HH:MM:SS")
+[User_Name].Value = Environ("UserName")
+
+End Sub
+
+
+'To extract all data row from multiple excel with same data format, merge excel to Raw Data
+Sub CopyData()
+    ' Change folder path as needed, keep the trailing backslash
+    Call FilenMyShape.MyShape_Click
+    Dim sFolder As String
+    sFolder = Sheets("Email").Range("D19").Value & "\" 'Put your folder in this cell
+    Dim sFile As String
+    Dim wshT As Worksheet
+    Dim t As Long
+    Dim wbkS As Workbook
+    Dim wshS As Worksheet
+    Dim s As Long
+    Dim m As Long
+    Application.ScreenUpdating = False
+    ' Target sheet
+    Set wshT = ThisWorkbook.ActiveSheet ' or use ActiveSheet
+    ' First available target row
+    t = wshT.Range("C" & wshT.Rows.Count).End(xlUp).Row + 1
+    ' Get first Excel filename in the folder
+    sFile = Dir(sFolder & "*.csv*")
+    ' Loop through the files
+    Do While sFile <> ""
+        ' Open source workbook
+        On Error Resume Next
+        Set wbkS = Workbooks.Open(sFolder & sFile)
+        ' Refer to the first sheet
+        Set wshS = wbkS.Worksheets(1)
+        ' Get the last used row
+        m = wshS.Range("A" & wshS.Rows.Count).End(xlUp).Row
+        ' Copy range
+        wshS.Range("A2:U" & m).Copy Destination:=wshT.Range("A" & t)
+        ' Increment target row
+        t = t + m - 1
+        ' Turn off clipboard
+        Application.CutCopyMode = False
+        ' Close source workbook
+        wbkS.Close SaveChanges:=False
+        ' Get next filename
+        sFile = Dir
+    Loop
+    Application.ScreenUpdating = True
+    
+    Set wshT = Nothing
+    Set wbkS = Nothing
+    Set wshS = Nothing
+End Sub
+
+'To move files from Pending to DONE once all data done copied / merged
+Sub MoveFiles()
+Call FilenMyShape.MyShape_Click
+Dim FSO As FileSystemObject
+
+Dim MyFile As String
+Dim sSFolder As String
+Dim sDFolder As String
+
+sSFolder = Sheets("Email").Range("D37") & "\"
+sDFolder = Sheets("Email").Range("D39") & "\"
+
+MyFile = Dir(sSFolder & "*.csv*")
+
+Set FSO = CreateObject("Scripting.FileSystemObject")
+
+Do Until MyFile = ""
+On Error Resume Next
+FSO.MoveFile sSFolder & MyFile, sDFolder & MyFile
+MyFile = Dir
+Loop
+
+Set FSO = Nothing
+
+End Sub
+
+'To copy workinglist today into DONE list for validation
+Sub CopytoAnalysis()
+Call FilenMyShape.MyShape_Click
+On Error Resume Next
+empty_row = Sheets("DoneList").Cells(Rows.Count, 1).End(xlUp).Row + 1
+last_row = Sheets("Dashboard").Cells(Rows.Count, 9).End(xlUp).Row
+final_row = Sheets("DoneList").Cells(Rows.Count, 1).End(xlUp).Row + 1 + Sheets("Dashboard").Cells(Rows.Count, 9).End(xlUp).Row
+
+Sheets("Dashboard").Range("F19:I" & last_row).Copy Sheets("DoneList").Range("A" & empty_row & ":" & "D" & final_row)
+
+End Sub
+
+'New Code
+'To get outlook header name and return to excel
+Sub getOutlookData()
+Sheets("Sheet1").Range("A4:D20").Clear
+
+Dim OutlookApp As Outlook.Application
+Dim OutlookNamespace As Namespace
+Dim Folder As MAPIFolder
+Dim OutlookMail As Variant
+Dim i As Integer
+
+Set OutlookApp = New Outlook.Application
+
+Set OutlookNamespace = OutlookApp.GetNamespace("MAPI")
+
+Set Folder = OutlookNamespace.GetDefaultFolder(olFolderInbox).Folders("IQMY eOrder")
+
+i = 1
+
+For Each OutlookMail In Folder.Items
+
+    If OutlookMail.ReceivedTime >= Range("email_Receipt_Date").Value Then
+        Range("email_Subject").Offset(i, 0) = OutlookMail.Subject
+        Range("email_Subject").Offset(i, 0).Columns.AutoFit
+        Range("email_Subject").Offset(i, 0).VerticalAlignment = xlTop
+        Range("email_Date").Offset(i, 0) = OutlookMail.ReceivedTime
+        Range("email_Date").Offset(i, 0).Columns.AutoFit
+        Range("email_Date").Offset(i, 0).VerticalAlignment = xlTop
+        Range("email_Sender").Offset(i, 0) = OutlookMail.SenderName
+        Range("email_Sender").Offset(i, 0).Columns.AutoFit
+        Range("email_Sender").Offset(i, 0).VerticalAlignment = xlTop
+        Range("email_Body").Offset(i, 0) = OutlookMail.Body
+        'Range("email_Body").Offset(i, 0).Columns.AutoFit
+        'Range("email_Body").Offset(i, 0).VerticalAlignment = xlTop
+        i = i + 1
+    End If
+    
+Next OutlookMail
+
+Set Folder = Nothing
+Set OutlookNamespace = Nothing
+Set OutlookApp = Nothing
+
+Sheets("Sheet1").Range("D:D").WrapText = False
+
+End Sub
+
+'New Code
+'Get list after RawData1 & 2 ready
+'Generate list with matched ID, return selected values.
+Sub GetList()
+Sheets("Dashboard").Range("L2:L2000").Clear
+Dim x As Long
+Dim y As Long
+x = 2
+y = 2
+
+data_lastrow = Sheets("Raw_Data").Cells(Rows.Count, 2).End(xlUp).Row
+
+Do Until x = data_lastrow
+    If Sheets("Raw_Data").Range("AA" & x).Value > 1 Then
+    'LabNo
+    Sheets("Dashboard").Range("L" & y).Value = Sheets("Raw_Data").Range("A" & x).Value
+    y = y + 1
+    End If
+    x = x + 1
+Loop
+
+x = 0
+y = 0
+Set data_lastrow = Nothing
+
+End Sub
+
+Sub GetList2()
+Sheets("Dashboard (2)").Range("L2:P2000").Clear
+Dim x As Long
+Dim y As Long
+x = 8
+y = 2
+
+data_lastrow = Sheets("Convert IQ files").Cells(Rows.Count, 2).End(xlUp).Row
+
+Do Until x = data_lastrow
+    If Sheets("Convert IQ files").Range("Q" & x).Value > 0 Then
+    Sheets("Dashboard (2)").Range("L" & y).Value = Sheets("Convert IQ files").Range("C" & x).Value
+    Sheets("Dashboard (2)").Range("M" & y).Value = Sheets("Convert IQ files").Range("D" & x).Value
+    Sheets("Dashboard (2)").Range("N" & y).Value = Sheets("Convert IQ files").Range("R" & x).Value
+    Sheets("Dashboard (2)").Range("O" & y).Value = Sheets("Convert IQ files").Range("S" & x).Value
+    Sheets("Dashboard (2)").Range("P" & y).Value = Sheets("Convert IQ files").Range("T" & x).Value
+    y = y + 1
+    End If
+    x = x + 1
+Loop
+
+x = 0
+y = 0
+Set data_lastrow = Nothing
+
+End Sub
+
+'New Code
+'To copy the whole sheets containing formulas and pivot, but paste values with its color retained
+Sub CopySheetsToNewWorkbook()
+Call FilenMyShape.MyShape_Click
+Call Time_Calculation.CaptureTime
+    Dim sourceWorkbook As Workbook
+    Dim newWorkbook As Workbook
+    Dim sourceSheet1 As Worksheet
+    Dim sourceSheet2 As Worksheet
+    Dim newSheet1 As Worksheet
+    Dim newSheet2 As Worksheet
+    
+    ' Set the source workbook and sheets
+    Set sourceWorkbook = ThisWorkbook ' Change this if needed
+    Set sourceSheet1 = sourceWorkbook.Sheets("Monthly") ' Change sheet names
+    Set sourceSheet2 = sourceWorkbook.Sheets("Summary 2023") ' Change sheet names
+    
+    sourceWorkbook.RefreshAll
+    
+    ' Create a new workbook
+    Set newWorkbook = Workbooks.Add
+    On Error Resume Next
+    Set newSheet1 = newWorkbook.Sheets(sourceSheet1.Name)
+    Set newSheet2 = newWorkbook.Sheets(sourceSheet2.Name)
+    
+    On Error GoTo 0
+    
+ ' If the sheets don't exist in the new workbook, add them
+    If newSheet1 Is Nothing Then
+        sourceSheet1.Copy Before:=newWorkbook.Sheets(1)
+        Set newSheet1 = newWorkbook.Sheets(1)
+    End If
+    
+    If newSheet2 Is Nothing Then
+        sourceSheet2.Copy Before:=newWorkbook.Sheets(1)
+        Set newSheet2 = newWorkbook.Sheets(1)
+    End If
+    
+    ' Copy formatting from sourceSheet1 to newSheet1
+    sourceSheet1.Cells.Copy
+    newSheet1.Cells.PasteSpecial Paste:=xlPasteFormats
+    Application.CutCopyMode = False ' Clear clipboard
+    
+    ' Copy formatting from sourceSheet2 to newSheet2
+    sourceSheet2.Cells.Copy
+    newSheet2.Cells.PasteSpecial Paste:=xlPasteFormats
+    Application.CutCopyMode = False ' Clear clipboard
+    
+    newSheet1.Range("A1:BB1000").Value2 = newSheet1.Range("A1:BB1000").Value
+    newSheet2.Range("A1:BB1000").Value2 = newSheet2.Range("A1:BB1000").Value
+'    newSheet1.Cells.Copy
+'    newSheet1.Cells.PasteSpecial Paste:=xlPasteValues
+'    Application.CutCopyMode = False
+'
+'    newSheet2.Cells.Copy
+'    newSheet2.Cells.PasteSpecial Paste:=xlPasteValues
+'    Application.CutCopyMode = False
+    
+    ' Optional: Save the new workbook with a specific name and path
+    'newWorkbook.SaveAs "https://pathologyasia.sharepoint.com/sites/dna-lab/customerc/Internal/Daily sample list/" & "Daily Sample List " & Sheets("Dashboard").Range("D26").Value & "2023.xlsx"
+    
+    ' Clean up
+    Set newWorkbook = Nothing
+    Set newWorkbook = Nothing
+    Set sourceSheet1 = Nothing
+    Set sourceSheet2 = Nothing
+    Set newSheet1 = Nothing
+    Set newSheet2 = Nothing
+    Call Time_Calculation.captureendtime
+End Sub
+
+'To get list of validation for RawData, example unknown, error testname, then return on Dashboard
+Sub GetList()
+Call FilenMyShape.MyShape_Click
+Call Time_Calculation.CaptureTime
+Sheets("Dashboard").Range("B39:D43").ClearContents
+Sheets("Dashboard").Range("B50:D53").ClearContents
+Sheets("Dashboard").Range("B60:D200").ClearContents
+
+    Dim Master As Worksheet
+    Dim Slave As Worksheet
+    Dim lrT As Long 'data last row
+    Dim i As Long, m, ALookup As Range, TLookup As Range
+
+    Set Master = ThisWorkbook.Worksheets("Reference")
+    Set Slave = ThisWorkbook.Worksheets("Raw Data")
+
+
+    Set TLookup = Master.Columns(1) '<< reference list Testname column
+    Set ALookup = Master.Columns(4) '<< reference list Area column
+
+
+    lrT = Slave.Cells(Rows.Count, 2).End(xlUp).Row
+    On Error Resume Next
+    With Slave
+        j = 39
+        For i = 2 To lrT
+            m = Application.Match(.Range("P" & i).Value, TLookup, 0)
+            If IsError(m) Then
+                Sheets("Dashboard").Range("B" & j).Value = Slave.Range("A" & i).Value
+                Sheets("Dashboard").Range("D" & j).Value = Slave.Range("P" & i).Value
+                j = j + 1
+            End If
+        Next i
+    End With
+
+    With Slave
+        j = 50
+        For i = 2 To lrT
+            m = Application.Match(.Range("N" & i).Value, ALookup, 0)
+            If IsError(m) Then
+                Sheets("Dashboard").Range("B" & j).Value = Slave.Range("A" & i).Value
+                Sheets("Dashboard").Range("D" & j).Value = Slave.Range("N" & i).Value
+                j = j + 1
+            End If
+        Next i
+    End With
+    
+    With Slave
+        j = 60
+        For i = 2 To lrT
+            If Slave.Range("B" & i).Value = "UNKNOWN" Then
+                Sheets("Dashboard").Range("B" & j).Value = Slave.Range("A" & i).Value
+                Sheets("Dashboard").Range("C" & j).Value = j - 59
+                Sheets("Dashboard").Range("D" & j).Value = Slave.Range("C" & i).Value
+                j = j + 1
+            End If
+        Next i
+    End With
+
+    Application.CutCopyMode = False
+    Set Master = Nothing
+    Set Slave = Nothing
+    Set ALookup = Nothing
+    Set TLookup = Nothing
+    j = 0
+    i = 0
+    Call Time_Calculation.captureendtime
+    MsgBox "Matrix Update Complete"
+    
+End Sub
+
+'Updating new data back into Raw Data based on validation
+Sub UpdateFOC()
+Call Time_Calculation.CaptureTime
+    Dim Slave As Worksheet
+    Dim lrT As Long 'data last row
+    Dim i As Long
+    Set Slave = ThisWorkbook.Worksheets("Raw Data")
+    lrT = Slave.Cells(Rows.Count, 2).End(xlUp).Row
+    With Slave
+        For i = 2 To lrT
+'        If Slave.Range("j" & i).Value = "FOC" Then
+'            Else
+            If Slave.Range("Q" & i).Value Like "*FOC*" Or Slave.Range("Q" & i).Value Like "*Reject*" Or Slave.Range("Q" & i).Value Like "*Cancel*" Then
+                Slave.Range("J" & i).Value = "FOC"
+            End If
+'        End If
+        Next i
+    End With
+    Set Slave = Nothing
+    lrT = 0
+    i = 0
+    Call Time_Calculation.captureendtime
 End Sub
